@@ -1,4 +1,3 @@
-import imp
 from inspect import getmembers, getmro, isclass
 from pkgutil import iter_modules
 import sys
@@ -205,38 +204,20 @@ class Scanner(object):
                 loader = importer.find_module(modname)
                 if loader is not None: # happens on pypy with orphaned pyc
                     try:
-                        if hasattr(loader, 'etc'):
-                            # python < py3.3
-                            module_type = loader.etc[2]
-                        else: # pragma: no cover
-                            # py3.3b2+ (importlib-using)
-                            module_type = imp.PY_SOURCE
-                            get_filename = getattr(loader, 'get_filename', None)
-                            if get_filename is None:
-                                get_filename = loader._get_filename
-                            try:
-                                fn = get_filename(modname)
-                            except TypeError:
-                                fn = get_filename()
-                            if fn.endswith(('.pyc', '.pyo', '$py.class')):
-                                module_type = imp.PY_COMPILED
-                        # only scrape members from non-orphaned source files
-                        # and package directories
-                        if module_type in (imp.PY_SOURCE, imp.PKG_DIRECTORY):
-                            # NB: use __import__(modname) rather than
-                            # loader.load_module(modname) to prevent
-                            # inappropriate double-execution of module code
-                            try:
-                                __import__(modname)
-                            except Exception:
-                                if onerror is not None:
-                                    onerror(modname)
-                                else:
-                                    raise
-                            module = sys.modules.get(modname)
-                            if module is not None:
-                                for name, ob in getmembers(module, None):
-                                    invoke(modname, name, ob)
+                        # NB: use __import__(modname) rather than
+                        # loader.load_module(modname) to prevent
+                        # inappropriate double-execution of module code
+                        try:
+                            __import__(modname)
+                        except Exception:
+                            if onerror is not None:
+                                onerror(modname)
+                            else:
+                                raise
+                        module = sys.modules.get(modname)
+                        if module is not None:
+                            for name, ob in getmembers(module, None):
+                                invoke(modname, name, ob)
                     finally:
                         if  ( hasattr(loader, 'file') and
                               hasattr(loader.file,'close') ):

@@ -103,37 +103,6 @@ class TestScanner(unittest.TestCase):
         scanner = self._makeOne(test=test)
         scanner.scan(packageinzip)
 
-    def test_package_with_orphaned_pyc_file(self):
-        # There is a module2.pyc file in the "pycfixtures" package; it
-        # has no corresponding .py source file.  Such orphaned .pyc
-        # files should be ignored during scanning.
-        from venusian.tests.fixtures import pyc
-        test = _Test()
-        scanner = self._makeOne(test=test) 
-        scanner.scan(pyc)
-        self.assertEqual(len(test.registrations), 4)
-        test.registrations.sort(key=lambda x: (x['name'], x['ob'].__module__))
-        from venusian.tests.fixtures.pyc.module import function as func1
-        from venusian.tests.fixtures.pyc.module import inst as inst1
-        from venusian.tests.fixtures.pyc.module import Class as Class1
-        from venusian.tests.fixtures.pyc import subpackage
-
-        self.assertEqual(test.registrations[0]['name'], 'Class')
-        self.assertEqual(test.registrations[0]['ob'], Class1)
-        self.assertEqual(test.registrations[0]['method'], True)
-
-        self.assertEqual(test.registrations[1]['name'], 'function')
-        self.assertEqual(test.registrations[1]['ob'], func1)
-        self.assertEqual(test.registrations[1]['function'], True)
-
-        self.assertEqual(test.registrations[2]['name'], 'inst')
-        self.assertEqual(test.registrations[2]['ob'], inst1)
-        self.assertEqual(test.registrations[2]['instance'], True)
-
-        self.assertEqual(test.registrations[3]['name'], 'pkgfunction')
-        self.assertEqual(test.registrations[3]['ob'], subpackage.pkgfunction)
-        self.assertEqual(test.registrations[3]['function'], True)
-
     def test_module(self):
         from venusian.tests.fixtures.one import module
         test = _Test()
